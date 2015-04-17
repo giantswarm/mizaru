@@ -39,6 +39,7 @@ func main() {
 
 		h := strings.Split(*hosts, ",")
 
+		log.Println("Activating", mode)
 		srv.Activate(mode, h, 10*time.Second)
 	}
 }

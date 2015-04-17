@@ -32,6 +32,13 @@ func (s *Service) Activate(mode string, hosts []string, timeout time.Duration) e
 	case "bridge":
 		// The network is split into two groups. One has the majority, but one node can see both sides
 		visibilityRules = top.Bridge()
+
+	case "single-bridge":
+		fallthrough
+	case "singlebridge":
+		// Like bridge, but the bridge node can only see one node of the minority
+		visibilityRules = top.SingleBridge()
+
 	case "ring":
 		// Each node can see two others nodes. They form a ring
 		visibilityRules = top.Ring()

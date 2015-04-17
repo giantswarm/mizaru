@@ -40,6 +40,8 @@ func main() {
 		h := strings.Split(*hosts, ",")
 
 		log.Println("Activating", mode)
-		srv.Activate(mode, h, 10*time.Second)
+		if err := srv.Activate(mode, h, 10*time.Second); err != nil {
+			log.Fatalf("Failed to active %s: %v", mode, err)
+		}
 	}
 }

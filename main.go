@@ -22,9 +22,10 @@ func executeLocally(command string, args []string) error {
 
 var (
 	serverAddr     = pflag.String("server-addr", "", "Pass host:port to make it listen on http")
-	timeout        = pflag.Int("timeout", 10, "Seconds to wait before reverting the rules (0=no wait)")
+	timeout        = pflag.Int("timeout", 0, "Seconds to wait before reverting the rules (0=infinite wait)")
 	dockerEndpoint = pflag.String("docker-endpoint", "unix:///var/run/docker.sock", "endpoint to use for docker communication")
 	iptablesChain  = pflag.String("iptables-chain", "FORWARD", "iptables chain to apply rules to")
+	block          = pflag.Bool("block", false, "Block until any signal arrives (which trigger rule cleanup)")
 )
 
 func main() {
@@ -51,24 +52,29 @@ func main() {
 			log.Fatalf("Could not fetch docker containers: %v", err)
 		}
 
-		cancel := make(chan struct{})
-		if *timeout > 0 {
-			go func() {
-				time.Sleep(time.Duration(*timeout) * time.Second)
-				close(cancel)
-			}()
+		var cancel chan struct{}
+		if *block || *timeout > 0 {
+			cancel = make(chan struct{})
+			if *timeout > 0 {
+				go func() {
+					time.Sleep(time.Duration(*timeout) * time.Second)
+					close(cancel)
+				}()
+			}
 
-			signChan := make(chan os.Signal, 1)
-			signal.Notify(signChan,
-				os.Interrupt, os.Kill,
-				syscall.SIGHUP,
-				syscall.SIGINT,
-				syscall.SIGTERM,
-				syscall.SIGQUIT)
-			go func() {
-				<-signChan
-				close(cancel)
-			}()
+			if *block {
+				signChan := make(chan os.Signal, 1)
+				signal.Notify(signChan,
+					os.Interrupt, os.Kill,
+					syscall.SIGHUP,
+					syscall.SIGINT,
+					syscall.SIGTERM,
+					syscall.SIGQUIT)
+				go func() {
+					<-signChan
+					close(cancel)
+				}()
+			}
 		}
 
 		log.Println("Activating", mode)

@@ -27,7 +27,7 @@ NOTE: you must invoke this with sudo as we are calling the iptables tool.
 
 ## Modes
 
- * `fast` - everything is allowd - all custom iptable rules will be deleted
+ * `fast` - everything is allowed - all custom iptable rules will be deleted
  * `netsplit` - The docker containers are split into a majority and minority group which cannot communicate with each other
  * `bridge` - Same as `netsplit`, but one container can talk to both sides
  * `single-bridge` - Same as `bridge`, but only one container on each side can talk to each other

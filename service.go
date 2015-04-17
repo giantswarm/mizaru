@@ -25,6 +25,10 @@ func (s *Service) Activate(mode string, hosts []Container, cancel chan struct{})
 	var visibilityRules []Rule
 	switch mode {
 	case "fast":
+		fallthrough
+	case "cleanup":
+		fallthrough
+	case "mr-clean":
 		// Everything is normal
 		visibilityRules = top.Default()
 

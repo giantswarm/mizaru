@@ -73,6 +73,27 @@ func (t *Topology) Bridge() []Rule {
 	return result
 }
 
+// SingleBridge returns rules
+func (t *Topology) SingleBridge() []Rule {
+	hosts := t.randomHosts()
+	majorityN := len(hosts)/2 + 1
+
+	majority := hosts[0:majorityN]
+	minority := hosts[majorityN:]
+
+	result := []Rule{}
+	result = append(result, fullMesh(majority)...)
+	result = append(result, fullMesh(minority)...)
+
+	// Now take one host from majority and make it see one minority host (bidirectional)
+	leftNode := majority[0]
+	rightNode := minority[0]
+	result = append(result, Rule{leftNode, rightNode})
+	result = append(result, Rule{rightNode, leftNode})
+
+	return result
+}
+
 func (t *Topology) Ring() []Rule {
 	// a ring only makes sense with at least 4 hosts.
 	if len(t.Hosts) < 4 {

@@ -4,7 +4,7 @@ const ChainInput = "INPUT"
 const TargetDrop = "DROP"
 
 func iptables(args ...string) []string {
-	return append([]string{"iptables"}, args...)
+	return append([]string{"iptables", "--wait"}, args...)
 }
 
 type IPTables struct {

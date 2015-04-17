@@ -13,6 +13,9 @@ type IPTables struct {
 func (i *IPTables) Drop(from, to string) []string {
 	return iptables("-A", ChainInput, "-s", from, "-d", to, "-j", TargetDrop)
 }
+func (i *IPTables) RevertDrop(from, to string) []string {
+	return iptables("-D", ChainInput, "-s", from, "-d", to, "-j", TargetDrop)
+}
 
 func (i *IPTables) FlushRules() []string {
 	return iptables("-F")

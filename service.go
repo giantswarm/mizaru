@@ -1,24 +1,19 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"log"
-	"net"
-	"os"
 	"time"
 
 	"github.com/juju/errgo"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/agent"
 )
+
+type Executor func(command string, args []string) error
 
 var (
 	UnknownMode = errgo.Newf("Unknown mode.")
 )
 
 type Service struct {
-	ssh      *SSH
+	executor Executor
 	iptables *IPTables
 }
 
@@ -47,60 +42,22 @@ func (s *Service) Activate(mode string, hosts []string, timeout time.Duration) e
 	dropRules := top.Invert(visibilityRules)
 
 	for _, rule := range dropRules {
-		if err := s.ssh.Do(rule.From, s.iptables.Drop(rule.From, rule.To)); err != nil {
+		cmd := s.iptables.Drop(rule.From, rule.To)
+
+		if err := s.executor(cmd[0], cmd[1:]); err != nil {
 			return errgo.Mask(err)
 		}
 	}
 
-	return nil
-}
-
-func NewSSH(username string) *SSH {
-	var a agent.Agent
-	if con, e := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); e == nil {
-		a = agent.NewClient(con)
-	} else {
-		panic("ssh-agent connect failed: " + e.Error())
+	if timeout > 0 {
+		time.Sleep(timeout)
+		for _, rule := range dropRules {
+			cmd := s.iptables.RevertDrop(rule.From, rule.To)
+			if err := s.executor(cmd[0], cmd[1:]); err != nil {
+				return errgo.Mask(err)
+			}
+		}
 	}
 
-	signers, err := a.Signers()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return &SSH{
-		config: &ssh.ClientConfig{
-			User: "username",
-			Auth: []ssh.AuthMethod{ssh.PublicKeys(signers...)},
-		},
-	}
-}
-
-type SSH struct {
-	config *ssh.ClientConfig
-}
-
-func (s *SSH) Do(host string, command []string) error {
-	client, err := ssh.Dial("tcp", host+":22", s.config)
-	if err != nil {
-		return errgo.Mask(err)
-	}
-
-	// Each ClientConn can support multiple interactive sessions,
-	// represented by a Session.
-	session, err := client.NewSession()
-	if err != nil {
-		return errgo.Mask(err)
-	}
-	defer session.Close()
-
-	// Once a Session is created, you can execute a single command on
-	// the remote side using the Run method.
-	var b bytes.Buffer
-	session.Stdout = &b
-	if err := session.Run("/usr/bin/whoami"); err != nil {
-		return errgo.Mask(err)
-	}
-	fmt.Println(b.String())
 	return nil
 }

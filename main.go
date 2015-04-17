@@ -23,12 +23,13 @@ var (
 	serverAddr     = pflag.String("server-addr", "", "Pass host:port to make it listen on http")
 	timeout        = pflag.Int("timeout", 10, "Seconds to wait before reverting the rules (0=no wait)")
 	dockerEndpoint = pflag.String("docker-endpoint", "unix:///var/run/docker.sock", "endpoint to use for docker communication")
+	iptablesChain  = pflag.String("iptables-chain", "FORWARD", "iptables chain to apply rules to")
 )
 
 func main() {
 	pflag.Parse()
 
-	srv := Service{executeLocally, &IPTables{}}
+	srv := Service{executeLocally, &IPTables{Chain: *iptablesChain}}
 
 	dockerClient, err := docker.NewClient(*dockerEndpoint)
 	if err != nil {

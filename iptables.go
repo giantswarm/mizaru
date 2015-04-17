@@ -1,6 +1,5 @@
 package main
 
-const ChainInput = "INPUT"
 const TargetDrop = "DROP"
 
 func iptables(args ...string) []string {
@@ -8,13 +7,14 @@ func iptables(args ...string) []string {
 }
 
 type IPTables struct {
+	Chain string
 }
 
 func (i *IPTables) Drop(from, to string) []string {
-	return iptables("-A", ChainInput, "-s", from, "-d", to, "-j", TargetDrop)
+	return iptables("-A", i.Chain, "-s", from, "-d", to, "-j", TargetDrop)
 }
 func (i *IPTables) RevertDrop(from, to string) []string {
-	return iptables("-D", ChainInput, "-s", from, "-d", to, "-j", TargetDrop)
+	return iptables("-D", i.Chain, "-s", from, "-d", to, "-j", TargetDrop)
 }
 
 func (i *IPTables) FlushRules() []string {

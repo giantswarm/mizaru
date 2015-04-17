@@ -17,8 +17,12 @@ type Service struct {
 	iptables *IPTables
 }
 
-func (s *Service) Activate(mode string, hosts []string, timeout time.Duration) error {
-	top := Topology{Hosts: hosts}
+func (s *Service) Activate(mode string, hosts []Container, timeout time.Duration) error {
+	var hs []string
+	for _, host := range hosts {
+		hs = append(hs, host.IP)
+	}
+	top := Topology{Hosts: hs}
 
 	var visibilityRules []Rule
 	switch mode {

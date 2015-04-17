@@ -17,7 +17,6 @@ func executeLocally(command string, args []string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
-	defer log.Printf("done: %v", cmd.ProcessState)
 	return cmd.Run()
 }
 

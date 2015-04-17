@@ -21,6 +21,7 @@ func executeLocally(command string, args []string) error {
 
 var (
 	serverAddr     = pflag.String("server-addr", "", "Pass host:port to make it listen on http")
+	timeout        = pflag.Int("timeout", 10, "Seconds to wait before reverting the rules (0=no wait)")
 	dockerEndpoint = pflag.String("docker-endpoint", "unix:///var/run/docker.sock", "endpoint to use for docker communication")
 )
 
@@ -49,7 +50,7 @@ func main() {
 		}
 
 		log.Println("Activating", mode)
-		if err := srv.Activate(mode, hs, 10*time.Second); err != nil {
+		if err := srv.Activate(mode, hs, time.Duration(*timeout)*time.Second); err != nil {
 			log.Fatalf("Failed to active %s: %v", mode, err)
 		}
 	}

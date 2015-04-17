@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/juju/errgo"
 )
 
@@ -17,7 +15,7 @@ type Service struct {
 	iptables *IPTables
 }
 
-func (s *Service) Activate(mode string, hosts []Container, timeout time.Duration) error {
+func (s *Service) Activate(mode string, hosts []Container, cancel chan struct{}) error {
 	var hs []string
 	for _, host := range hosts {
 		hs = append(hs, host.IP)
@@ -60,8 +58,8 @@ func (s *Service) Activate(mode string, hosts []Container, timeout time.Duration
 		}
 	}
 
-	if timeout > 0 {
-		time.Sleep(timeout)
+	if cancel != nil {
+		<-cancel // block until cancel is closed or sthg is sent
 		for _, rule := range dropRules {
 			cmd := s.iptables.RevertDrop(rule.From, rule.To)
 			if err := s.executor(cmd[0], cmd[1:]); err != nil {

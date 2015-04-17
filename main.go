@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
@@ -50,8 +52,28 @@ func main() {
 			log.Fatalf("Could not fetch docker containers: %v", err)
 		}
 
+		cancel := make(chan struct{})
+		if *timeout > 0 {
+			go func() {
+				time.Sleep(time.Duration(*timeout) * time.Second)
+				close(cancel)
+			}()
+
+			signChan := make(chan os.Signal, 1)
+			signal.Notify(signChan,
+				os.Interrupt, os.Kill,
+				syscall.SIGHUP,
+				syscall.SIGINT,
+				syscall.SIGTERM,
+				syscall.SIGQUIT)
+			go func() {
+				<-signChan
+				close(cancel)
+			}()
+		}
+
 		log.Println("Activating", mode)
-		if err := srv.Activate(mode, hs, time.Duration(*timeout)*time.Second); err != nil {
+		if err := srv.Activate(mode, hs, cancel); err != nil {
 			log.Fatalf("Failed to active %s: %v", mode, err)
 		}
 	}

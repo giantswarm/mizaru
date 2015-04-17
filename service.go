@@ -52,6 +52,11 @@ func (s *Service) Activate(mode string, hosts []Container, cancel chan struct{})
 		return errgo.Notef(UnknownMode, "%s", mode)
 	}
 
+	for _, rule := range visibilityRules {
+		cmd := s.iptables.RevertDrop(rule.From, rule.To)
+		s.executor(cmd[0], cmd[1:])
+	}
+
 	dropRules := top.Invert(visibilityRules)
 
 	for _, rule := range dropRules {

@@ -11,7 +11,7 @@ Chaos Monkey for docker containers.
 
 Mizaru is a little helper to generate IPTable DROP rules to test resilience against netsplits and other network problems.
 
-Idea inspired (or shamelessly stolen from) [Aphry`s Jepsen](https://github.com/aphyr/jepsen).
+Idea inspired (or shamelessly stolen from) [Aphyr`s Jepsen](https://github.com/aphyr/jepsen).
 
 ## Usage
 
